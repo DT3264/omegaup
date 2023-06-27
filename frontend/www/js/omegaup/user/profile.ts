@@ -45,6 +45,7 @@ OmegaUp.on('ready', () => {
         profile: payload.profile,
         data: payload.extraProfileDetails,
         identities: payload.identities,
+        apiTokens: payload.apiTokens,
         hasPassword: payload.extraProfileDetails?.hasPassword,
         selectedTab,
         searchResultSchools: searchResultSchools,
@@ -63,6 +64,7 @@ OmegaUp.on('ready', () => {
           visitorBadges: new Set(payload.extraProfileDetails?.badges),
           selectedTab: this.selectedTab,
           identities: this.identities,
+          apiTokens: this.apiTokens,
           countries: payload.countries,
           programmingLanguages: payload.programmingLanguages,
           hasPassword: this.hasPassword,
@@ -201,6 +203,29 @@ OmegaUp.on('ready', () => {
               })
               .catch(ui.apiError);
           },
+          'create-api-token': (tokenName: string) => {
+            api.User.createAPIToken({ name: tokenName })
+              .then(({ token }) => {
+                refreshApiTokensList();
+                //TODO: add string to lang.T
+                ui.success(
+                  ui.formatString(T.apiTokenSuccessfullyCreated, {
+                    token: token,
+                  }),
+                  false,
+                );
+              })
+              .catch(ui.apiError);
+          },
+          'revoke-api-token': (tokenName: string) => {
+            api.User.revokeAPIToken({ name: tokenName })
+              .then(() => {
+                refreshApiTokensList();
+                //TODO: add string to lang.T
+                ui.success(T.apiTokenSuccessfullyRevoked);
+              })
+              .catch(ui.apiError);
+          },
         },
       });
     },
@@ -210,6 +235,13 @@ OmegaUp.on('ready', () => {
     api.User.listAssociatedIdentities({})
       .then(function (data) {
         userProfile.identities = data.identities;
+      })
+      .catch(ui.apiError);
+  }
+  function refreshApiTokensList() {
+    api.User.listAPITokens({})
+      .then(function (data) {
+        userProfile.apiTokens = data.tokens;
       })
       .catch(ui.apiError);
   }

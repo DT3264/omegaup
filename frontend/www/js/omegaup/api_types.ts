@@ -2233,6 +2233,20 @@ export namespace types {
       elementId: string = 'payload',
     ): types.UserProfileDetailsPayload {
       return ((x) => {
+        x.apiTokens = ((x) => {
+          if (!Array.isArray(x)) {
+            return x;
+          }
+          return x.map((x) => {
+            x.last_used = ((x: number) => new Date(x * 1000))(x.last_used);
+            x.rate_limit = ((x) => {
+              x.reset = ((x: number) => new Date(x * 1000))(x.reset);
+              return x;
+            })(x.rate_limit);
+            x.timestamp = ((x: number) => new Date(x * 1000))(x.timestamp);
+            return x;
+          });
+        })(x.apiTokens);
         if (
           typeof x.extraProfileDetails !== 'undefined' &&
           x.extraProfileDetails !== null
@@ -2407,6 +2421,13 @@ export namespace types {
         teachingAssistant: types.CoursesByTimeType;
       };
     };
+  }
+
+  export interface ApiToken {
+    last_used: Date;
+    name: string;
+    rate_limit: { limit: number; remaining: number; reset: Date };
+    timestamp: Date;
   }
 
   export interface ArenaAssignment {
@@ -4643,6 +4664,7 @@ export namespace types {
   }
 
   export interface UserProfileDetailsPayload {
+    apiTokens: types.ApiToken[];
     countries: dao.Countries[];
     extraProfileDetails?: types.ExtraProfileDetails;
     identities: types.AssociatedIdentity[];
@@ -5580,14 +5602,7 @@ export namespace messages {
   export type UserListResponse = { results: types.ListItem[] };
   export type UserListAPITokensRequest = { [key: string]: any };
   export type _UserListAPITokensServerResponse = any;
-  export type UserListAPITokensResponse = {
-    tokens: {
-      last_used: Date;
-      name: string;
-      rate_limit: { limit: number; remaining: number; reset: Date };
-      timestamp: Date;
-    }[];
-  };
+  export type UserListAPITokensResponse = { tokens: types.ApiToken[] };
   export type UserListAssociatedIdentitiesRequest = { [key: string]: any };
   export type UserListAssociatedIdentitiesResponse = {
     identities: types.AssociatedIdentity[];
